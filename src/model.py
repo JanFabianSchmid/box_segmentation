@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torchvision.transforms as transforms
 
 
 class UNet(nn.Module):
@@ -29,6 +30,8 @@ class UNet(nn.Module):
         # Output
         self.out_conv = nn.Conv2d(64, out_channels, kernel_size=1)
 
+        self.image_normalization = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+
     def conv_block(self, in_channels, out_channels):
         return nn.Sequential(
             nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
@@ -41,6 +44,9 @@ class UNet(nn.Module):
         return nn.ConvTranspose2d(in_channels, out_channels, kernel_size=2, stride=2)
 
     def forward(self, x):
+        # Normalize the image
+        x = self.image_normalization(x)
+
         # Encoder
         enc1 = self.enc1(x)
         enc2 = self.enc2(F.max_pool2d(enc1, 2))
